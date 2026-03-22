@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Pokédex - Home">
+  <section class="hero">
+    <img
+      src="https://raw.githubusercontent.com/PokeAPI/media/master/logo/pokeapi_256.png"
+      alt="Pokémon Logo"
+      class="logo"
+    />
+    <h1>Welcome to the Pokédex</h1>
+    <p>Explore the world of Pokémon. Browse the catalog, view detailed stats, or generate your own!</p>
+    <div class="cta-buttons">
+      <a href="/pokedex" class="btn btn-primary">Browse Pokédex</a>
+      <a href="https://pokeapi.co/" target="_blank" rel="noopener" class="btn btn-secondary">Visit PokéAPI</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 60vh;
+    gap: 1.5rem;
+  }
+
+  .logo {
+    width: 200px;
+    height: auto;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+  }
+
+  p {
+    font-size: 1.15rem;
+    color: #555;
+    max-width: 500px;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary {
+    background: #e63946;
+    color: white;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #333;
+    border: 2px solid #ddd;
+  }
+</style>

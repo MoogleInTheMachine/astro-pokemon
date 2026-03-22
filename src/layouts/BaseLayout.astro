@@ -1,0 +1,106 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Astro Pokédex - Explore the world of Pokémon" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/" class:list={[{ active: Astro.url.pathname === '/' }]}>Home</a>
+        <a href="/pokedex" class:list={[{ active: Astro.url.pathname.startsWith('/pokedex') }]}>Pokedex</a>
+        <a href="/genpokemon" class:list={[{ active: Astro.url.pathname.startsWith('/genpokemon') }]}>GenPokemon</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <p>Astro Pokédex &copy; {new Date().getFullYear()}</p>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #f5f0ff 0%, #fce4ec 50%, #fff0f5 100%);
+    color: #1a1a2e;
+  }
+
+  main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+</style>
+
+<style>
+  header {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  nav a {
+    font-weight: 500;
+    font-size: 1rem;
+    transition: color 0.2s;
+  }
+
+  nav a:hover {
+    color: #e63946;
+  }
+
+  nav a.active {
+    color: #e63946;
+    font-weight: 700;
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.85rem;
+    color: #666;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+</style>
