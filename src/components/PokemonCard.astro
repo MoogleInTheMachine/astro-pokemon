@@ -1,0 +1,55 @@
+---
+interface Props {
+  name: string;
+  id: number;
+}
+
+const { name, id } = Astro.props;
+const sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+const dexNumber = `#${String(id).padStart(3, '0')}`;
+---
+
+<a href={`/pokemon/${name}`} class="card">
+  <span class="dex-number">{dexNumber}</span>
+  <img src={sprite} alt={name} loading="lazy" />
+  <span class="name">{name.toUpperCase()}</span>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .dex-number {
+    align-self: flex-end;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #aaa;
+  }
+
+  .card img {
+    width: 120px;
+    height: 120px;
+    image-rendering: pixelated;
+  }
+
+  .name {
+    margin-top: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+  }
+</style>

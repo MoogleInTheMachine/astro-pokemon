@@ -1,8 +1,162 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PokemonCard from '../components/PokemonCard.astro';
+
+const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=15&offset=0');
+const data = await res.json();
+
+const pokemon = data.results.map((p: { name: string; url: string }) => {
+  const segments = p.url.split('/').filter(Boolean);
+  const id = Number(segments[segments.length - 1]);
+  return { name: p.name, id };
+});
 ---
 
 <BaseLayout title="Pokédex - Gallery">
   <h1>Pokédex</h1>
-  <p>Coming soon — the Pokémon gallery will be built here.</p>
+  <div class="gallery" id="gallery">
+    {pokemon.map((p: { name: string; id: number }) => (
+      <PokemonCard name={p.name} id={p.id} />
+    ))}
+  </div>
+  <div id="sentinel"></div>
+  <div id="loading" class="loading">Loading...</div>
 </BaseLayout>
+
+<style>
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 660px;
+    margin: 0 auto;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1rem;
+    color: #888;
+    display: none;
+  }
+</style>
+
+<script>
+  const gallery = document.getElementById('gallery')!;
+  const sentinel = document.getElementById('sentinel')!;
+  const loading = document.getElementById('loading')!;
+
+  let offset = 15;
+  const limit = 15;
+  let isLoading = false;
+
+  function extractId(url: string): number {
+    const segments = url.split('/').filter(Boolean);
+    return Number(segments[segments.length - 1]);
+  }
+
+  function createCard(name: string, id: number) {
+    const sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+    const dexNumber = `#${String(id).padStart(3, '0')}`;
+
+    const card = document.createElement('a');
+    card.href = `/pokemon/${name}`;
+    card.className = 'card';
+    card.innerHTML = `
+      <span class="dex-number">${dexNumber}</span>
+      <img src="${sprite}" alt="${name}" loading="lazy" />
+      <span class="name">${name.toUpperCase()}</span>
+    `;
+    return card;
+  }
+
+  async function loadMore() {
+    if (isLoading) return;
+    isLoading = true;
+    loading.style.display = 'block';
+
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`);
+      const data = await res.json();
+
+      if (data.results.length === 0) {
+        observer.disconnect();
+        loading.textContent = 'No more Pokémon!';
+        loading.style.display = 'block';
+        return;
+      }
+
+      for (const p of data.results) {
+        const id = extractId(p.url);
+        gallery.appendChild(createCard(p.name, id));
+      }
+
+      offset += limit;
+    } catch (err) {
+      console.error('Failed to load Pokémon:', err);
+    } finally {
+      isLoading = false;
+      loading.style.display = 'none';
+    }
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        loadMore();
+      }
+    },
+    { rootMargin: '200px' }
+  );
+
+  observer.observe(sentinel);
+</script>
+
+<style is:global>
+  /* Styles for dynamically created cards (from JS) */
+  #gallery .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.25rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  #gallery .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  #gallery .card .dex-number {
+    align-self: flex-end;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #aaa;
+  }
+
+  #gallery .card img {
+    width: 120px;
+    height: 120px;
+    image-rendering: pixelated;
+  }
+
+  #gallery .card .name {
+    margin-top: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+  }
+</style>
