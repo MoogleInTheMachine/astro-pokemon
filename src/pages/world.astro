@@ -1,0 +1,262 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const regions = [
+  {
+    gen: 'I',
+    name: 'Kanto',
+    year: 1996,
+    games: 'Red, Blue, Yellow',
+    description: 'The original region where it all began. Kanto is home to the first 151 Pokémon, including iconic starters Bulbasaur, Charmander, and Squirtle. Trainers journey through cities like Cerulean and Celadon to challenge the Elite Four at the Indigo Plateau.',
+    pokemon: 151,
+    starters: ['Bulbasaur', 'Charmander', 'Squirtle'],
+  },
+  {
+    gen: 'II',
+    name: 'Johto',
+    year: 2000,
+    games: 'Gold, Silver, Crystal',
+    description: 'Located west of Kanto, Johto introduced breeding, held items, and the day-night cycle. The region is steeped in tradition, with landmarks like the Burned Tower in Ecruteak City and the mysterious Ruins of Alph.',
+    pokemon: 100,
+    starters: ['Chikorita', 'Cyndaquil', 'Totodile'],
+  },
+  {
+    gen: 'III',
+    name: 'Hoenn',
+    year: 2003,
+    games: 'Ruby, Sapphire, Emerald',
+    description: 'A tropical region with vast oceans and volcanic terrain. Hoenn introduced double battles, abilities, and natures. The conflict between Team Aqua and Team Magma over the legendary Pokémon Kyogre and Groudon defines the story.',
+    pokemon: 135,
+    starters: ['Treecko', 'Torchic', 'Mudkip'],
+  },
+  {
+    gen: 'IV',
+    name: 'Sinnoh',
+    year: 2007,
+    games: 'Diamond, Pearl, Platinum',
+    description: 'A northern region with snowy mountains and ancient myths. Sinnoh explores the creation of the Pokémon universe through Dialga (time), Palkia (space), and Giratina (antimatter). It introduced the physical/special split for moves.',
+    pokemon: 107,
+    starters: ['Turtwig', 'Chimchar', 'Piplup'],
+  },
+  {
+    gen: 'V',
+    name: 'Unova',
+    year: 2011,
+    games: 'Black, White, Black 2, White 2',
+    description: 'Inspired by New York City, Unova is a metropolitan region far from previous ones. It introduced 156 entirely new Pokémon — the most of any generation — and featured a deeper narrative about the ethics of Pokémon training.',
+    pokemon: 156,
+    starters: ['Snivy', 'Tepig', 'Oshawott'],
+  },
+  {
+    gen: 'VI',
+    name: 'Kalos',
+    year: 2013,
+    games: 'X, Y',
+    description: 'Inspired by France, Kalos is known for its elegance and the introduction of Mega Evolution and the Fairy type. The Lumiose City tower is the region\'s most recognizable landmark, and the story revolves around the ultimate weapon.',
+    pokemon: 72,
+    starters: ['Chespin', 'Fennekin', 'Froakie'],
+  },
+  {
+    gen: 'VII',
+    name: 'Alola',
+    year: 2016,
+    games: 'Sun, Moon, Ultra Sun, Ultra Moon',
+    description: 'A Hawaiian-inspired archipelago of four islands. Alola replaced gyms with island trials and introduced regional variants — Kanto Pokémon adapted to Alola\'s tropical climate. Z-Moves gave trainers powerful once-per-battle attacks.',
+    pokemon: 88,
+    starters: ['Rowlet', 'Litten', 'Popplio'],
+  },
+  {
+    gen: 'VIII',
+    name: 'Galar',
+    year: 2019,
+    games: 'Sword, Shield',
+    description: 'Based on Great Britain, Galar features the Wild Area — the series\' first open-world zone. Dynamaxing lets Pokémon grow to enormous sizes in battle. The region\'s gym challenge is treated as a spectator sport in massive stadiums.',
+    pokemon: 96,
+    starters: ['Grookey', 'Scorbunny', 'Sobble'],
+  },
+  {
+    gen: 'IX',
+    name: 'Paldea',
+    year: 2022,
+    games: 'Scarlet, Violet',
+    description: 'Inspired by the Iberian Peninsula, Paldea is the first fully open-world region. Players choose between three storylines: the gym challenge, battling Titan Pokémon, or taking on Team Star. The Terastal phenomenon changes Pokémon types mid-battle.',
+    pokemon: 120,
+    starters: ['Sprigatito', 'Fuecoco', 'Quaxly'],
+  },
+];
+---
+
+<BaseLayout title="Pokédex - World">
+  <h1>The World of Pokémon</h1>
+
+  <section class="lore">
+    <h2>What are Pokémon?</h2>
+    <p>
+      Pokémon are creatures that inhabit a world alongside humans. They come in all shapes
+      and sizes — from tiny insects to towering dragons — and possess extraordinary abilities
+      tied to their types: fire, water, grass, electric, and many more. Some Pokémon live in
+      the wild, while others form bonds with human trainers.
+    </p>
+    <p>
+      Trainers capture Pokémon using devices called Poké Balls, then raise and battle them to
+      grow stronger together. The ultimate goal for most trainers is to defeat the regional
+      Pokémon League and become Champion, though many pursue other paths like breeding,
+      researching, or simply befriending Pokémon.
+    </p>
+
+    <h2>A Living World</h2>
+    <p>
+      The Pokémon world spans many regions, each with its own culture, climate, and native
+      Pokémon species. Over the years, researchers have cataloged over 1,000 species.
+      Pokémon can evolve into stronger forms, learn new moves, and even change types through
+      special phenomena like Mega Evolution, Z-Moves, Dynamaxing, and Terastallization.
+    </p>
+    <p>
+      Each region introduces new mechanics, new Pokémon, and new stories — but the core
+      theme remains the same: the bond between people and Pokémon.
+    </p>
+  </section>
+
+  <section class="regions">
+    <h2>Regions & Generations</h2>
+    {regions.map((r) => (
+      <div class="region-card">
+        <div class="region-header">
+          <div>
+            <span class="gen-badge">Gen {r.gen}</span>
+            <h3>{r.name}</h3>
+          </div>
+          <div class="region-meta">
+            <span>{r.year}</span>
+            <span class="divider">|</span>
+            <span>{r.pokemon} new Pokémon</span>
+          </div>
+        </div>
+        <p class="region-games">{r.games}</p>
+        <p class="region-desc">{r.description}</p>
+        <div class="starters">
+          <span class="starters-label">Starters:</span>
+          {r.starters.map((s) => (
+            <span class="starter-name">{s}</span>
+          ))}
+        </div>
+      </div>
+    ))}
+  </section>
+</BaseLayout>
+
+<style>
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    margin: 1.5rem 0 0.75rem;
+    color: #1a1a2e;
+  }
+
+  h2:first-child {
+    margin-top: 0;
+  }
+
+  .lore {
+    max-width: 700px;
+    margin: 0 auto 2rem;
+  }
+
+  .lore p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  .regions {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .regions h2 {
+    margin-bottom: 1rem;
+  }
+
+  .region-card {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .region-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.4rem;
+  }
+
+  .region-header h3 {
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+  }
+
+  .gen-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: #e63946;
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .region-meta {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #888;
+  }
+
+  .divider {
+    margin: 0 0.3rem;
+  }
+
+  .region-games {
+    font-size: 0.85rem;
+    color: #999;
+    font-style: italic;
+    margin-bottom: 0.5rem;
+  }
+
+  .region-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #444;
+    margin-bottom: 0.75rem;
+  }
+
+  .starters {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .starters-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .starter-name {
+    padding: 0.2rem 0.6rem;
+    background: #f0f0f0;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+</style>

@@ -20,6 +20,7 @@ const { title } = Astro.props;
       <nav>
         <a href="/" class:list={[{ active: Astro.url.pathname === '/' }]}>Home</a>
         <a href="/pokedex" class:list={[{ active: Astro.url.pathname.startsWith('/pokedex') }]}>Pokedex</a>
+        <a href="/world" class:list={[{ active: Astro.url.pathname.startsWith('/world') }]}>World</a>
         <a href="/genpokemon" class:list={[{ active: Astro.url.pathname.startsWith('/genpokemon') }]}>GenPokemon</a>
       </nav>
     </header>
