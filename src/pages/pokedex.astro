@@ -1,26 +1,28 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import PokemonCard from '../components/PokemonCard.astro';
-
-const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=15&offset=0');
-const data = await res.json();
-
-const pokemon = data.results.map((p: { name: string; url: string }) => {
-  const segments = p.url.split('/').filter(Boolean);
-  const id = Number(segments[segments.length - 1]);
-  return { name: p.name, id };
-});
 ---
 
 <BaseLayout title="Pokédex - Gallery">
   <h1>Pokédex</h1>
-  <div class="gallery" id="gallery">
-    {pokemon.map((p: { name: string; id: number }) => (
-      <PokemonCard name={p.name} id={p.id} />
-    ))}
+
+  <div class="controls">
+    <div class="search-bar">
+      <input type="text" id="search" placeholder="Search by name or number..." />
+    </div>
+    <div class="control-buttons">
+      <button id="shiny-toggle" class="control-btn" title="Toggle shiny sprites">
+        ✨ Shiny
+      </button>
+      <button id="filter-btn" class="control-btn" title="Filter Pokémon">
+        🔽 Filter
+      </button>
+    </div>
   </div>
+
+  <div class="gallery" id="gallery"></div>
   <div id="sentinel"></div>
   <div id="loading" class="loading">Loading...</div>
+  <div id="no-results" class="no-results">No Pokémon found.</div>
 </BaseLayout>
 
 <style>
@@ -28,6 +30,56 @@ const pokemon = data.results.map((p: { name: string; url: string }) => {
     text-align: center;
     font-size: 2rem;
     margin-bottom: 1.5rem;
+  }
+
+  .controls {
+    max-width: 660px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .search-bar input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+    background: white;
+  }
+
+  .search-bar input:focus {
+    border-color: #e63946;
+  }
+
+  .control-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .control-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .control-btn:hover {
+    border-color: #ccc;
+    background: #f9f9f9;
+  }
+
+  .control-btn.active {
+    border-color: #e63946;
+    background: #fff0f1;
+    color: #e63946;
   }
 
   .gallery {
@@ -46,39 +98,113 @@ const pokemon = data.results.map((p: { name: string; url: string }) => {
     color: #888;
     display: none;
   }
+
+  .no-results {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.1rem;
+    color: #888;
+    display: none;
+  }
 </style>
 
 <script>
   const gallery = document.getElementById('gallery')!;
   const sentinel = document.getElementById('sentinel')!;
   const loading = document.getElementById('loading')!;
+  const noResults = document.getElementById('no-results')!;
+  const searchInput = document.getElementById('search') as HTMLInputElement;
+  const shinyToggle = document.getElementById('shiny-toggle')!;
+  const filterBtn = document.getElementById('filter-btn')!;
 
-  let offset = 15;
+  let offset = 0;
   const limit = 15;
   let isLoading = false;
+  let isShiny = false;
+  let searchMode = false;
+  let searchTimeout: ReturnType<typeof setTimeout>;
+
+  // Full pokemon index (name + id) loaded once for search
+  type PokemonEntry = { name: string; id: number; url: string };
+  let allPokemon: PokemonEntry[] = [];
+  let indexReady = false;
+
+  // Cache fetched pokemon details (id -> types)
+  const typeCache: Record<number, string[]> = {};
+
+  // Load the full name list once for instant search
+  async function loadIndex() {
+    try {
+      const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000&offset=0');
+      const data = await res.json();
+      allPokemon = data.results.map((p: { name: string; url: string }) => {
+        const segments = p.url.split('/').filter(Boolean);
+        const id = Number(segments[segments.length - 1]);
+        return { name: p.name, id, url: p.url };
+      });
+      indexReady = true;
+    } catch (err) {
+      console.error('Failed to load pokemon index:', err);
+    }
+  }
+  loadIndex();
+
+  function spriteUrl(id: number): string {
+    return isShiny
+      ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`
+      : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+  }
 
   function extractId(url: string): number {
     const segments = url.split('/').filter(Boolean);
     return Number(segments[segments.length - 1]);
   }
 
-  function createCard(name: string, id: number) {
-    const sprite = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+  async function fetchTypes(id: number): Promise<string[]> {
+    if (typeCache[id]) return typeCache[id];
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+      const data = await res.json();
+      const types = data.types.map((t: any) => t.type.name);
+      typeCache[id] = types;
+      return types;
+    } catch {
+      return [];
+    }
+  }
+
+  function createCard(name: string, id: number, types: string[]): HTMLAnchorElement {
+    const sprite = spriteUrl(id);
     const dexNumber = `#${String(id).padStart(3, '0')}`;
 
     const card = document.createElement('a');
     card.href = `/pokemon/${name}`;
     card.className = 'card';
+    card.dataset.pokemonId = String(id);
+
+    const typeBadges = types
+      .map((t) => `<span class="card-type type-${t}">${t}</span>`)
+      .join('');
+
     card.innerHTML = `
       <span class="dex-number">${dexNumber}</span>
       <img src="${sprite}" alt="${name}" loading="lazy" />
       <span class="name">${name.toUpperCase()}</span>
+      <div class="card-types">${typeBadges}</div>
     `;
     return card;
   }
 
+  async function loadBatch(pokemonList: { name: string; id: number }[]) {
+    const typesArr = await Promise.all(pokemonList.map((e) => fetchTypes(e.id)));
+
+    for (let i = 0; i < pokemonList.length; i++) {
+      gallery.appendChild(createCard(pokemonList[i].name, pokemonList[i].id, typesArr[i]));
+    }
+  }
+
   async function loadMore() {
-    if (isLoading) return;
+    if (isLoading || searchMode) return;
     isLoading = true;
     loading.style.display = 'block';
 
@@ -93,11 +219,12 @@ const pokemon = data.results.map((p: { name: string; url: string }) => {
         return;
       }
 
-      for (const p of data.results) {
+      const entries = data.results.map((p: { name: string; url: string }) => {
         const id = extractId(p.url);
-        gallery.appendChild(createCard(p.name, id));
-      }
+        return { name: p.name, id };
+      });
 
+      await loadBatch(entries);
       offset += limit;
     } catch (err) {
       console.error('Failed to load Pokémon:', err);
@@ -107,10 +234,120 @@ const pokemon = data.results.map((p: { name: string; url: string }) => {
     }
   }
 
+  // Search — filters the full index as you type
+  let searchResultsOffset = 0;
+  let currentSearchResults: PokemonEntry[] = [];
+
+  async function handleSearch(query: string) {
+    query = query.trim();
+
+    if (!query) {
+      // Restore browse mode
+      searchMode = false;
+      noResults.style.display = 'none';
+      gallery.innerHTML = '';
+      offset = 0;
+      currentSearchResults = [];
+      observer.observe(sentinel);
+      await loadMore();
+      return;
+    }
+
+    searchMode = true;
+    observer.disconnect();
+    gallery.innerHTML = '';
+    noResults.style.display = 'none';
+    loading.style.display = 'block';
+    searchResultsOffset = 0;
+
+    const searchLower = query.toLowerCase();
+
+    // If it's a number, strip leading zeros and match by dex number
+    if (/^\d+$/.test(searchLower)) {
+      const num = parseInt(searchLower, 10);
+      currentSearchResults = allPokemon.filter((p) => String(p.id).startsWith(String(num)));
+    } else {
+      // Match names that start with the query first, then contain it
+      const startsWith = allPokemon.filter((p) => p.name.startsWith(searchLower));
+      const contains = allPokemon.filter((p) => !p.name.startsWith(searchLower) && p.name.includes(searchLower));
+      currentSearchResults = [...startsWith, ...contains];
+    }
+
+    if (currentSearchResults.length === 0) {
+      noResults.style.display = 'block';
+      loading.style.display = 'none';
+      return;
+    }
+
+    // Load first batch of search results
+    const batch = currentSearchResults.slice(0, limit);
+    searchResultsOffset = batch.length;
+    await loadBatch(batch);
+
+    // Re-enable infinite scroll for search results if there are more
+    if (searchResultsOffset < currentSearchResults.length) {
+      observer.observe(sentinel);
+    }
+
+    loading.style.display = 'none';
+  }
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => handleSearch(searchInput.value), 300);
+  });
+
+  // Shiny toggle
+  shinyToggle.addEventListener('click', () => {
+    isShiny = !isShiny;
+    shinyToggle.classList.toggle('active', isShiny);
+
+    // Update all existing card sprites
+    const cards = gallery.querySelectorAll('.card');
+    cards.forEach((card) => {
+      const id = Number((card as HTMLElement).dataset.pokemonId);
+      const img = card.querySelector('img') as HTMLImageElement;
+      if (img && id) {
+        img.src = spriteUrl(id);
+      }
+    });
+  });
+
+  // Filter button placeholder
+  filterBtn.addEventListener('click', () => {
+    filterBtn.classList.toggle('active');
+    // TODO: open filter panel
+  });
+
+  // Load more search results when scrolling
+  async function loadMoreSearchResults() {
+    if (isLoading || !searchMode) return;
+    if (searchResultsOffset >= currentSearchResults.length) return;
+
+    isLoading = true;
+    loading.style.display = 'block';
+
+    const batch = currentSearchResults.slice(searchResultsOffset, searchResultsOffset + limit);
+    searchResultsOffset += batch.length;
+    await loadBatch(batch);
+
+    if (searchResultsOffset >= currentSearchResults.length) {
+      observer.disconnect();
+    }
+
+    isLoading = false;
+    loading.style.display = 'none';
+  }
+
+  // Infinite scroll observer
   const observer = new IntersectionObserver(
     (entries) => {
       if (entries[0].isIntersecting) {
-        loadMore();
+        if (searchMode) {
+          loadMoreSearchResults();
+        } else {
+          loadMore();
+        }
       }
     },
     { rootMargin: '200px' }
@@ -120,7 +357,6 @@ const pokemon = data.results.map((p: { name: string; url: string }) => {
 </script>
 
 <style is:global>
-  /* Styles for dynamically created cards (from JS) */
   #gallery .card {
     display: flex;
     flex-direction: column;
@@ -159,4 +395,39 @@ const pokemon = data.results.map((p: { name: string; url: string }) => {
     font-size: 0.95rem;
     letter-spacing: 0.5px;
   }
+
+  #gallery .card .card-types {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+  }
+
+  #gallery .card .card-type {
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    text-transform: capitalize;
+    background: #777;
+  }
+
+  .card-type.type-normal { background: #a8a77a; }
+  .card-type.type-fire { background: #ee8130; }
+  .card-type.type-water { background: #6390f0; }
+  .card-type.type-electric { background: #f7d02c; color: #333; }
+  .card-type.type-grass { background: #7ac74c; }
+  .card-type.type-ice { background: #96d9d6; color: #333; }
+  .card-type.type-fighting { background: #c22e28; }
+  .card-type.type-poison { background: #a33ea1; }
+  .card-type.type-ground { background: #e2bf65; color: #333; }
+  .card-type.type-flying { background: #a98ff3; }
+  .card-type.type-psychic { background: #f95587; }
+  .card-type.type-bug { background: #a6b91a; }
+  .card-type.type-rock { background: #b6a136; }
+  .card-type.type-ghost { background: #735797; }
+  .card-type.type-dragon { background: #6f35fc; }
+  .card-type.type-dark { background: #705746; }
+  .card-type.type-steel { background: #b7b7ce; color: #333; }
+  .card-type.type-fairy { background: #d685ad; }
 </style>
