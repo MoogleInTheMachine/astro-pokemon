@@ -24,7 +24,9 @@ const { title } = Astro.props;
       </nav>
     </header>
     <main>
-      <slot />
+      <div class="content-panel">
+        <slot />
+      </div>
     </main>
     <footer>
       <p>Astro Pokédex &copy; {new Date().getFullYear()}</p>
@@ -44,16 +46,24 @@ const { title } = Astro.props;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, #f5f0ff 0%, #fce4ec 50%, #fff0f5 100%);
+    background: url('/bg.jpg') no-repeat center center fixed;
+    background-size: cover;
     color: #1a1a2e;
   }
 
   main {
     flex: 1;
     padding: 2rem;
-    max-width: 1200px;
+    max-width: 750px;
     margin: 0 auto;
     width: 100%;
+  }
+
+  .content-panel {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(3px);
+    border-radius: 16px;
+    padding: 1.25rem;
   }
 
   a {
@@ -100,7 +110,6 @@ const { title } = Astro.props;
     text-align: center;
     padding: 1.5rem;
     font-size: 0.85rem;
-    color: #666;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    color: rgba(255, 255, 255, 0.8);
   }
 </style>

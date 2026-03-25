@@ -6,17 +6,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <h1>Pokédex</h1>
 
   <div class="controls">
-    <div class="search-bar">
-      <input type="text" id="search" placeholder="Search by name or number..." />
-    </div>
-    <div class="control-buttons">
-      <button id="shiny-toggle" class="control-btn" title="Toggle shiny sprites">
-        ✨ Shiny
-      </button>
-      <button id="filter-btn" class="control-btn" title="Filter Pokémon">
-        🔽 Filter
-      </button>
-    </div>
+    <input type="text" id="search" placeholder="Search by name or number..." />
+    <label class="toggle" id="shiny-toggle" title="Toggle shiny sprites">
+      <input type="checkbox" id="shiny-checkbox" />
+      <span class="toggle-slider"></span>
+      <span class="toggle-label">Shiny</span>
+    </label>
+    <button id="filter-btn" class="control-btn" title="Filter Pokémon">
+      Filter
+    </button>
   </div>
 
   <div class="gallery" id="gallery"></div>
@@ -36,14 +34,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     max-width: 660px;
     margin: 0 auto 1.5rem;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 0.75rem;
   }
 
-  .search-bar input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
+  .controls input[type="text"] {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
     border: 2px solid #ddd;
     border-radius: 10px;
     outline: none;
@@ -51,17 +49,58 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     background: white;
   }
 
-  .search-bar input:focus {
+  .controls input[type="text"]:focus {
     border-color: #e63946;
   }
 
-  .control-buttons {
+  .toggle {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .toggle input {
+    display: none;
+  }
+
+  .toggle-slider {
+    width: 36px;
+    height: 20px;
+    background: #3b5ca8;
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .toggle input:checked + .toggle-slider {
+    background: #e63946;
+  }
+
+  .toggle input:checked + .toggle-slider::after {
+    transform: translateX(16px);
+  }
+
+  .toggle-label {
+    font-size: 0.9rem;
+    font-weight: 600;
   }
 
   .control-btn {
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1rem;
     border: 2px solid #ddd;
     border-radius: 8px;
     background: white;
@@ -69,6 +108,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     font-weight: 600;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
+    white-space: nowrap;
   }
 
   .control-btn:hover {
@@ -114,7 +154,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const loading = document.getElementById('loading')!;
   const noResults = document.getElementById('no-results')!;
   const searchInput = document.getElementById('search') as HTMLInputElement;
-  const shinyToggle = document.getElementById('shiny-toggle')!;
   const filterBtn = document.getElementById('filter-btn')!;
 
   let offset = 0;
@@ -298,9 +337,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   });
 
   // Shiny toggle
-  shinyToggle.addEventListener('click', () => {
-    isShiny = !isShiny;
-    shinyToggle.classList.toggle('active', isShiny);
+  const shinyCheckbox = document.getElementById('shiny-checkbox') as HTMLInputElement;
+  shinyCheckbox.addEventListener('change', () => {
+    isShiny = shinyCheckbox.checked;
 
     // Update all existing card sprites
     const cards = gallery.querySelectorAll('.card');
